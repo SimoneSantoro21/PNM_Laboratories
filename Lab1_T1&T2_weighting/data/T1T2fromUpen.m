@@ -1,4 +1,5 @@
 T = readtable('CPMGalbume1B.dat');
+name="cpmg albume"
 sumDistrT2 = sum(T{:,"Sig_Np"},'omitnan');
 weightsT2 = T{:,"Sig_Np"}./sumDistrT2;
 T2 = sum(T{:,"T"}.*weightsT2(:),'omitnan')
@@ -24,6 +25,7 @@ set(gca,'yscale','log')
 hold off
 
 T = readtable('CPMGtuorlo1B.dat');
+name="cpmg tuorlo"
 sumDistrT2 = sum(T{:,"Sig_Np"},'omitnan');
 weightsT2 = T{:,"Sig_Np"}./sumDistrT2;
 T2 = sum(T{:,"T"}.*weightsT2(:),'omitnan')
@@ -49,6 +51,7 @@ set(gca,'yscale','log')
 hold off
 
 T = readtable('IRalbumeH.dat');
+name="IR albume"
 sumDistrT1 = sum(T{:,"Sig_Np"},'omitnan');
 weightsT1 = T{:,"Sig_Np"}./sumDistrT1;
 T1 = sum(T{:,"T"}.*weightsT1(:),'omitnan')
@@ -74,6 +77,7 @@ mdl = fitnlm(time,signal,fnc,B0)
 hold off
 
 T = readtable('IRtuorloH.dat');
+name="IR tuorlo"
 sumDistrT1 = sum(T{:,"Sig_Np"},'omitnan');
 weightsT1 = T{:,"Sig_Np"}./sumDistrT1;
 T1 = sum(T{:,"T"}.*weightsT1(:),'omitnan')
