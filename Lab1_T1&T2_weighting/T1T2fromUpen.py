@@ -51,7 +51,7 @@ def T2_estimate_weighted_avg(table):
     return T2
 
 
-def T2_plots(table, figure_name1, figure_name2):
+def T2_plots(table, title1, figure_name1, title2,  figure_name2):
     """
     Creates two figures related to T2:
         - figure1 = UPEN output after the inversion
@@ -84,11 +84,11 @@ def T2_plots(table, figure_name1, figure_name2):
     plt.figure(figsize=(10, 6))
     plt.plot(table["T"], table["Sig_Np"])
     plt.xscale('log')
-    plt.xlabel("T")
-    plt.ylabel("Sig_Np")
+    plt.xlabel("T2 (ms)")
+    plt.ylabel("Signal density (a.u.)")
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) 
 
-    plt.title("Plot with Log-Scaled X-Axis")
+    plt.title(title1)
     plt.grid(True)
 
     filename1 = figure_name1
@@ -127,11 +127,11 @@ def T2_plots(table, figure_name1, figure_name2):
     sns.regplot(data=table, x="SigT", y="Sig", fit_reg=False, label="Data points")
     plt.plot(x_space, y_pred, color='r', linestyle='-', linewidth=2, label=f'y = e^({intercept:.5f} + {slope:.5f}x)')
     plt.fill_between(x_space, lower_bound, upper_bound, color='r', alpha=0.2, label='95% Confidence Interval')
-    plt.xlabel("SigT")
-    plt.ylabel("Sig")
+    plt.xlabel("TE (ms)")
+    plt.ylabel("Signal (a.u.)")
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) 
 
-    plt.title("Scatter Plot with Log-Transformed Y-Axis and Linear Regression")
+    plt.title(title2)
     plt.yscale('log')
     plt.legend()
     plt.grid(True)
@@ -153,11 +153,11 @@ def T1_estimate_weighted_avg(table):
     return T1
 
 
-def fnc(x, b1, b2, b3):
-    return b1 * (1 - (1 + b3) * np.exp(b2 * x))
+def fnc(x, b1, b2):
+    return b1 * (1 - 2 * np.exp(b2 * x))
 
 
-def T1_plots(table, figure_name1, figure_name2):
+def T1_plots(table, title1, figure_name1, title2, figure_name2):
 
     # Converting columns to numeric types
     table["Sig_Np"] = pd.to_numeric(table["Sig_Np"], errors='coerce')
@@ -177,11 +177,11 @@ def T1_plots(table, figure_name1, figure_name2):
     plt.figure(figsize=(10, 6))
     plt.plot(table["T"], table["Sig_Np"])
     plt.xscale('log')
-    plt.xlabel("T")
-    plt.ylabel("Sig_Np")
+    plt.xlabel("T1 (ms)")
+    plt.ylabel("Signal density (a.u.)")
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) 
 
-    plt.title("T vs Sig_Np Plot with Log-Scaled X-Axis")
+    plt.title(title1)
     plt.grid(True)
     plt.savefig(os.path.join(FIGURE_PATH, figure_name1))
 
@@ -192,13 +192,13 @@ def T1_plots(table, figure_name1, figure_name2):
     sns.regplot(x = time, y = signal, fit_reg=False, label="Data points")
     #plt.scatter(time, signal)
     
-    B0 = [1.5e06, -1/1000, 0.8]
+    B0 = [1.5e06, -1/1000]
     popt, _ = curve_fit(fnc, time, signal, p0=B0)
     plt.plot(time, fnc(time, *popt), color='r', label='Fitted curve')
-    plt.xlabel("SigT")
-    plt.ylabel("Sig")
+    plt.xlabel("IT (ms)")
+    plt.ylabel("Signal (a.u.)")
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) 
-    plt.title("Non-linear Model Fit")
+    plt.title(title2)
     plt.legend()
     plt.grid(True)
     plt.savefig(os.path.join(FIGURE_PATH, figure_name2))
@@ -236,10 +236,10 @@ def inversion_recovery_plots(table_yolk, table_albumen, figure_name):
     signal_albumen = signal_albumen - np.min(signal_albumen) / 2
     sns.regplot(x = time_albumen, y = signal_albumen, fit_reg=False, label="Albumen data points")
 
-    plt.xlabel("SigT")
-    plt.ylabel("Sig")
+    plt.xlabel("IT (ms)")
+    plt.ylabel("Signal (a.u.)")
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) 
-    plt.title("Non-linear Model Fit")
+    plt.title("Inversion Recovery data for yolk and albumen")
     plt.legend()
     plt.grid(True)
     plt.savefig(os.path.join(FIGURE_PATH, figure_name))
@@ -251,15 +251,19 @@ if __name__ == '__main__':
     table_IR_yolk = read_table(IR_YOLK)
 
     
-    T2_plots(table_CPMG_albumen, "ALBUMEN_T2_Upen_Inverted", "ALBUMEN_T2_Upen_output&fit")
+    T2_plots(table_CPMG_albumen, "Albumen Signal density vs T2", "ALBUMEN_T2_Upen_Inverted",
+              "Albumen Signal vs Echo Time", "ALBUMEN_T2_Upen_output&fit")
     T2 = T2_estimate_weighted_avg(table_CPMG_albumen)
     print(T2)
-    T2_plots(table_CPMG_yolk, "YOLK_T2_Upen_Inverted", "YOLK_T2_Upen_output&fit")
+    T2_plots(table_CPMG_yolk, "Yolk Signal density vs T2", "YOLK_T2_Upen_Inverted",
+             "Albumen Signal vs Echo Time", "YOLK_T2_Upen_output&fit")
     T2_estimate_weighted_avg(table_CPMG_yolk)
 
-    T1_plots(table_IR_albumen, "ALBUMEN_T1_Upen_Inverted", "ALBUMEN_T1_Upen_output&fit")
+    T1_plots(table_IR_albumen, "Albumen Signal density vs T1", "ALBUMEN_T1_Upen_Inverted", 
+             "Albumen Signal vs Inversion Time", "ALBUMEN_T1_Upen_output&fit")
     T1_estimate_weighted_avg(table_IR_albumen)
-    T1_plots(table_IR_yolk, "YOLK_T1_Upen_Inverted", "YOLK_T1_Upen_output&fit")
+    T1_plots(table_IR_yolk, "Yolk Signal density vs T1", "YOLK_T1_Upen_Inverted", 
+             "Yolk Signal vs Inversion Time", "YOLK_T1_Upen_output&fit")
     T1_estimate_weighted_avg(table_IR_yolk)
 
     inversion_recovery_plots(table_IR_yolk, table_IR_albumen, "IR_scatter_plots")
