@@ -18,6 +18,17 @@ IR_ALBUMEN = 'IRalbumeH.dat'
 IR_YOLK = 'IRtuorloH.dat'
 
 
+def sns_graphic_options():
+    sns.set_theme(style="ticks")
+    sns.set_context("paper", font_scale=2.0)
+    plt.rcParams["font.family"] = "serif"  
+    plt.rcParams["axes.grid"] = True  
+    plt.rcParams["grid.linestyle"] = ":" 
+    plt.rcParams['axes.spines.right'] = False 
+    plt.rcParams['axes.spines.top'] = False
+
+    return None
+
 def read_table(PATH):
     """
     Returns a pd.dataframe obtained from .dat file
@@ -79,13 +90,7 @@ def T2_plots(table, title1, figure_name1, estimated_T2, title2,  figure_name2, t
     table["Sig"] = pd.to_numeric(table["Sig"], errors='coerce')
     
     # Customize
-    sns.set_theme(style="ticks")
-    sns.set_context("paper", font_scale=1.5)
-    plt.rcParams["font.family"] = "serif"  
-    plt.rcParams["axes.grid"] = True  
-    plt.rcParams["grid.linestyle"] = ":" 
-    plt.rcParams['axes.spines.right'] = False 
-    plt.rcParams['axes.spines.top'] = False
+    sns_graphic_options()
 
     # Figure 1: Plot with log-scaled x-axis
     plt.figure(figsize=(10, 6))
@@ -208,13 +213,7 @@ def T1_plots(table, title1, figure_name1, estimated_T1, title2, figure_name2, ti
     table["Sig"] = pd.to_numeric(table["Sig"], errors='coerce')
 
     # Customize
-    sns.set_theme(style="ticks")
-    sns.set_context("paper", font_scale=1.5)
-    plt.rcParams["font.family"] = "serif"
-    plt.rcParams["axes.grid"] = True
-    plt.rcParams["grid.linestyle"] = ":" 
-    plt.rcParams['axes.spines.right'] = False 
-    plt.rcParams['axes.spines.top'] = False
+    sns_graphic_options()
 
     plt.figure(figsize=(10, 6))
     plt.plot(table["T"], table["Sig_Np"])
@@ -280,13 +279,7 @@ def inversion_recovery_plots(table_yolk, table_albumen, figure_name):
     table_albumen["Sig"] = pd.to_numeric(table_albumen["Sig"], errors='coerce')
 
     # Customize
-    sns.set_theme(style="ticks")
-    sns.set_context("paper", font_scale=1.5)
-    plt.rcParams["font.family"] = "serif"
-    plt.rcParams["axes.grid"] = True
-    plt.rcParams["grid.linestyle"] = ":" 
-    plt.rcParams['axes.spines.right'] = False 
-    plt.rcParams['axes.spines.top'] = False
+    sns_graphic_options()
 
     time_yolk = table_yolk["SigT"].values[:64]
     signal_yolk = -1 * table_yolk["Sig"].values[:64]
