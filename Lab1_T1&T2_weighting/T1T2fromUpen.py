@@ -50,6 +50,39 @@ def cut_dataframe(table, column, threshold):
     return table
 
 
+def upen_inverted_plot(table_CPMG, table_IR, title, figure_name):
+    # Converting columns to numeric types
+    table_CPMG["Sig_Np"] = pd.to_numeric(table_CPMG["Sig_Np"], errors='coerce')
+    table_CPMG["T"] = pd.to_numeric(table_CPMG["T"], errors='coerce')
+    table_CPMG["SigT"] = pd.to_numeric(table_CPMG["SigT"], errors='coerce')
+    table_CPMG["Sig"] = pd.to_numeric(table_CPMG["Sig"], errors='coerce')
+    
+    table_IR["Sig_Np"] = pd.to_numeric(table_IR["Sig_Np"], errors='coerce')
+    table_IR["T"] = pd.to_numeric(table_IR["T"], errors='coerce')
+    table_IR["SigT"] = pd.to_numeric(table_IR["SigT"], errors='coerce')
+    table_IR["Sig"] = pd.to_numeric(table_IR["Sig"], errors='coerce')
+    # Customize
+    sns_graphic_options()
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(table_CPMG["T"], table_CPMG["Sig_Np"], label = "T2 distribution", linewidth = 2.5)
+    plt.plot(table_IR["T"], table_IR["Sig_Np"], label = "T1 distribution", linewidth = 2.5)
+
+    plt.xscale('log')
+    plt.xlabel("T1, T2 (ms)")
+    plt.ylabel("Signal density (a.u.)")
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) 
+    plt.legend()
+
+    plt.title(title)
+    plt.grid(True)
+
+    filename1 = figure_name
+    filepath1 = os.path.join(FIGURE_PATH, filename1)
+    plt.savefig(filepath1)
+
+    return None
+
 def T2_estimate_weighted_avg(table):
     """
     Returns an estimate of T2 computed as the weighted average
@@ -206,13 +239,11 @@ def compute_r_squared(custom_function, ydata):
 
 def T1_plots(table, title1, figure_name1, estimated_T1, title2, figure_name2, title3, figure_name3):
 
-    # Converting columns to numeric types
     table["Sig_Np"] = pd.to_numeric(table["Sig_Np"], errors='coerce')
     table["T"] = pd.to_numeric(table["T"], errors='coerce')
     table["SigT"] = pd.to_numeric(table["SigT"], errors='coerce')
     table["Sig"] = pd.to_numeric(table["Sig"], errors='coerce')
 
-    # Customize
     sns_graphic_options()
 
     plt.figure(figsize=(10, 6))
@@ -221,7 +252,6 @@ def T1_plots(table, title1, figure_name1, estimated_T1, title2, figure_name2, ti
     plt.xlabel("T1 (ms)")
     plt.ylabel("Signal density (a.u.)")
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) 
-
     plt.title(title1)
     plt.grid(True)
     plt.savefig(os.path.join(FIGURE_PATH, figure_name1))
@@ -231,13 +261,22 @@ def T1_plots(table, title1, figure_name1, estimated_T1, title2, figure_name2, ti
     signal = signal - np.min(signal) / 2
     plt.figure(figsize=(10,6))
     sns.regplot(x = time, y = signal, fit_reg=False, label="Data points")
-    #plt.scatter(time, signal)
-    
+
     B0 = [1.5e06, -1/1000]
     popt, pcov = curve_fit(fnc, time, signal, p0=B0)
     perr = np.sqrt(np.diag(pcov))
 
-    plt.plot(time, fnc(time, *popt), color='r', label='Fit curve')
+    # Confidence interval calculation
+    alpha = 0.05  # 95% confidence interval
+    n = len(time)
+    y_pred = fnc(time, *popt)
+    dof = max(0, n - len(popt))
+    tval = stats.t.ppf(1.0 - alpha / 2., dof)
+    ci = tval * perr
+
+    # Plotting fit, data, and confidence intervals
+    plt.plot(time, y_pred, color='r', label='Fit curve')
+    #plt.fill_between(time, fnc(time, *(popt - ci)), fnc(time, *(popt + ci)), color='r', alpha=0.2, label='95% Confidence Interval')
     plt.xlabel("IT (ms)")
     plt.ylabel("Signal (a.u.)")
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) 
@@ -246,13 +285,12 @@ def T1_plots(table, title1, figure_name1, estimated_T1, title2, figure_name2, ti
     plt.grid(True)
     plt.savefig(os.path.join(FIGURE_PATH, figure_name2))
 
-
     plt.figure(figsize=(10,6))   
-    fit_curve = fnc(time, *popt) 
-    expected_curve = fnc(time, popt[0],-1 / estimated_T1) 
+    fit_curve = fnc(time, *popt)
+    expected_curve = fnc(time, popt[0], -1 / estimated_T1)
     plt.plot(time, fit_curve, color='r', label='Fit curve', linewidth=3)
-    plt.plot(time, expected_curve, color='g', label='Expected curve', linestyle='dashed', linewidth=3, alpha = 0.8)
-    plt.plot(time, fit_curve - expected_curve, color='b', label='Fit - Expected curve', linewidth=3, alpha = 0.8)
+    plt.plot(time, expected_curve, color='g', label='Expected curve', linestyle='dashed', linewidth=3, alpha=0.8)
+    plt.plot(time, fit_curve - expected_curve, color='b', label='Fit - Expected curve', linewidth=3, alpha=0.8)
     plt.xlabel("IT (ms)")
     plt.ylabel("Signal (a.u.)")
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) 
@@ -335,7 +373,8 @@ if __name__ == '__main__':
              "YOLK_T1_fitted&expected")
 
     inversion_recovery_plots(table_IR_yolk, table_IR_albumen, "IR_scatter_plots")
-
+    upen_inverted_plot(table_CPMG_albumen, table_IR_albumen, "Albumen Signal density distribution", "ALBUMEN_upen")
+    upen_inverted_plot(table_CPMG_yolk, table_IR_yolk, "Yolk Signal density distribution", "YOLK_upen")
 
     dict_fit_T2_yolk = {
         'Intercept (M_0)': f"{fit_outcome_T2_yolk[0][0]:.2f} ± {fit_outcome_T2_yolk[1][0]:.2f}",
